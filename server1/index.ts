@@ -2,6 +2,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import express from 'express';
 import http from 'http';
 import { createClient } from 'redis';
+// import {Redis} from 'ioredis';
 import { Server } from "socket.io";
 
 
@@ -10,22 +11,26 @@ const server = http.createServer(app);
 
 const io = new Server(server)
 
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3009;
 
 // redis pub/sub clients
 const pubClient = createClient({
     url: process.env.REDIS_URL || 'redis://localhost:6379'
 });
-const subClient = createClient();
+const subClient = createClient({
+    url: process.env.REDIS_URL || 'redis://localhost:6379'
+});
 
 Promise.all([pubClient.connect(),subClient.connect()]).then(() => {
     console.log('Redis pub sub connected');
 }).then(() => {
+
     io.adapter(createAdapter(pubClient,subClient));
     server.listen(PORT, () => {
         console.log(`listening on => ${PORT}`);
     });
 }).catch((err) => {
+    console.log('process.env.REDIS_URL  :>> ', process.env.REDIS_URL );
     console.error('Error occured :>>', err);
 });
 
@@ -73,5 +78,5 @@ io.on('connection', async (socket) => {
 
 
 app.get('/api', (req:express.Request, res:express.Response) => {
-    res.send({data:'req from server2'})
+    res.send({data:'req from server1'})
 });

@@ -10,13 +10,15 @@ const server = http.createServer(app);
 
 const io = new Server(server)
 
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 3010;
 
 // redis pub/sub clients
 const pubClient = createClient({
     url: process.env.REDIS_URL || 'redis://localhost:6379'
 });
-const subClient = createClient();
+const subClient = createClient({
+    url: process.env.REDIS_URL || 'redis://localhost:6379'
+});
 
 Promise.all([pubClient.connect(),subClient.connect()]).then(() => {
     console.log('Redis pub sub connected');
@@ -26,6 +28,7 @@ Promise.all([pubClient.connect(),subClient.connect()]).then(() => {
         console.log(`listening on => ${PORT}`);
     });
 }).catch((err) => {
+    console.log('process.env.REDIS_URL  :>> ', process.env.REDIS_URL );
     console.error('Error occured :>>', err);
 });
 
