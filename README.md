@@ -17,7 +17,7 @@ This project aims to provide load balancing capabilities for socket.io applicati
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/your-username/project-name.git
+    git clone https://github.com/007tickooayush/bun-redis-socket.git
     ```
 
 2. Install the dependencies:
