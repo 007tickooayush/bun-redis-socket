@@ -31,6 +31,20 @@ Promise.all([pubClient.connect(),subClient.connect()]).then(() => {
 
 subClient.subscribe('userAddedRedis',(message) => {
     console.log(`message: `,JSON.parse(message));
+    const data = JSON.parse(message);
+    if(data.socket){
+        if(data.id){
+            pubClient.set(`id:${data.id}`,`${data.socket}`).then(() => {
+                console.log(`SAVED: ${data.socket} added to set`)
+            }).catch(err => {
+                console.error(`ERROR: ${data.socket} not added to set`)
+            })
+        }else{
+            console.error('data.id attribute not found');
+        }
+    }else{
+        console.error('data.socket attribute not found');
+    }
 }).then(() => {
     console.log('userAddedRedis subscribed');
 }).catch(err => {
@@ -45,6 +59,11 @@ io.on('connection', async (socket) => {
         await pubClient.publish('userAddedRedis', JSON.stringify({...data, socket: socket.id}));
         console.log('addNew :>> ', data);
         socket.broadcast.emit('newAdded',data);
+    });
+
+    socket.on('getUser', async (data) => {
+        const usersocket = await pubClient.get(`id:${data.id}`);
+        socket.emit('sentUser',{socket: usersocket});
     });
 
     socket.on('disconnect', () => {
