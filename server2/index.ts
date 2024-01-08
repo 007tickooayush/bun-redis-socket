@@ -10,7 +10,7 @@ const server = http.createServer(app);
 
 const io = new Server(server)
 
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3003;
 
 // redis pub/sub clients
 const pubClient = createClient({
