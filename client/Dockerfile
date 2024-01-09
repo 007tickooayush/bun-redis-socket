@@ -10,5 +10,4 @@ COPY . .
 # Expose the port that the application will run on
 EXPOSE 5173
 # Define the command to run the application with hot reload
-# CMD ["bun", "run", "nodemon"]
 CMD [ "bun", "run", "dev" ]

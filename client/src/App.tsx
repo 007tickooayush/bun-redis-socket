@@ -1,12 +1,15 @@
-// import { useState } from 'react'
+// import { useEffect, useState } from 'react'
+import { SocketContext, socket } from './context/socket'
+
 
 function App() {
-	// const [count, setCount] = useState(0)
 
 	return (
-		<>
-			App Component
-		</>
+		<SocketContext.Provider value={{socket}}>
+			<div >
+				<h1>App Component</h1>
+			</div>
+		</SocketContext.Provider>
 	)
 }
 
