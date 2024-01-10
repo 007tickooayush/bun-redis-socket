@@ -8,7 +8,14 @@ import { Server } from "socket.io";
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server)
+const io = new Server(server,{
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST','PUT','DELETE'],
+        allowedHeaders: ['user-cred'],
+        credentials: true
+    }
+});
 
 const PORT = process.env.PORT || 3010;
 
@@ -32,8 +39,8 @@ Promise.all([pubClient.connect(),subClient.connect()]).then(() => {
     console.error('Error occured :>>', err);
 });
 
-subClient.subscribe('userAddedRedis',(message) => {
-    console.log(`message: `,JSON.parse(message));
+const userAddedRedis = (message:any) => {
+    console.log(`userAddedRedis message: `,JSON.parse(message));
     const data = JSON.parse(message);
 
     if(data.socket){
@@ -49,8 +56,34 @@ subClient.subscribe('userAddedRedis',(message) => {
     }else{
         console.error('data.socket attribute not found');
     }
+}
+
+const saveDataServer = (message:any) => {
+    console.log(`saveDataServer message: `,JSON.parse(message));
+    let {id,...data} = JSON.parse(message);
+    
+    if(id){
+        pubClient.set(`data:${id}`,JSON.stringify(data)).then(() => {
+            console.log(`SAVED: "data:${id}":${JSON.stringify(data)} added to set`)
+        }).catch(err => {
+            console.error(`ERROR: "data${id}":${JSON.stringify(data)} not added to set err:>> ${err}`)
+        })
+    }else{
+        console.error('id attribute not found');
+    }
+}
+
+const channels = ['userAddedRedis','saveDataServer'];
+subClient.subscribe(channels,(message,channel) => {
+    if( channel === 'userAddedRedis'){
+        userAddedRedis(message);
+    }else if(channel === 'saveDataServer'){
+        saveDataServer(message);
+    }
 }).then(() => {
-    console.log('userAddedRedis subscribed');
+    channels.forEach(channel => {
+        console.log(channel,'subscribed');
+    });
 }).catch(err => {
     console.log('err :>> ', err);
 });
@@ -62,12 +95,25 @@ io.on('connection', async (socket) => {
     socket.on('addNew', async (data) => {
         await pubClient.publish('userAddedRedis', JSON.stringify({...data, socket: socket.id}));
         console.log('addNew :>> ', data);
-        socket.broadcast.emit('newAdded',data);
+        io.emit('newAdded',data);
     });
 
     socket.on('getUser', async (data) => {
         const usersocket = await pubClient.get(`id:${data.id}`);
+        console.log('getUser :>> ', data);
         socket.emit('sentUser',{socket: usersocket});
+    });
+
+    socket.on('saveData', async (data) => {
+        await pubClient.publish('saveDataServer',JSON.stringify(data));
+        console.log('saveData :>> ', data);
+        socket.emit('savedData',data);
+    });
+        
+    socket.on('getData', async (id) => {
+        const serverData = await pubClient.get(`data:${id}`);
+        console.log('getData :>> ', id,serverData);
+        socket.emit('gotData',serverData);
     });
 
     socket.on('disconnect', () => {
