@@ -1,6 +1,7 @@
 import { useEffect,useState,useContext,useCallback } from 'react'
 import { SocketContext } from '../context/socket';
 import { username } from '../context/details';
+import { Container, Input, Button, Center, Stack, Heading, Text, Alert } from '@chakra-ui/react';
 
 const Details = () => {
     const [recId, setRecId] = useState('');
@@ -54,34 +55,36 @@ const Details = () => {
 	},[socket]);
     
     return (
-        <div>
-            <button type="button" onClick={() => setGetData(!getData)}>GET OR SAVE TOGGLE</button>
+        <Container>
+            <Center>
+                <Button type="button" onClick={() => setGetData(!getData)} shadow='xl'>GET OR SAVE TOGGLE</Button>
+            </Center>
 
             {
                 (getData) ?
-                    (<div>
-                        get data
-                        <input placeholder='receiver username' onChange={(e) => setRecId(e.target.value)} />
-                        {/* create button to getData */}
-                        <button type='button' onClick={() => handleGetDataServer()}>send</button>
-                    </div>)
-                    : (<div>
-                        <h2>save data</h2>
+                    (<Stack>
+                        <Heading as='h3' size='md'>Get data</Heading>
+                        <Input placeholder='receiver username' variant='flushed' onChange={(e) => setRecId(e.target.value)} />
+                        <Button type='button' onClick={() => handleGetDataServer()}>Send</Button>
+                    </Stack>)
+                    : (<Stack>
+                        <Heading as='h3' size='md'>Save data</Heading>
                         
+                        <Text>field 1:</Text>
+                        <Input variant='filled' shadow='xl' name='field1' id='field1' placeholder='field1' onChange={(e) => setField1(e.target.value)} />
 
-                        <label htmlFor='field1'>field 1:</label>
-                        <input name='field1' id='field1' placeholder='field1' onChange={(e) => setField1(e.target.value)} />
+                        <Text>field 2:</Text>
+                        <Input variant='filled' shadow='xl' name='field2' id='field2' placeholder='field2' onChange={(e) => setField2(e.target.value)} />
 
-                        <label htmlFor='field2'>field 2:</label>
-                        <input name='field2' id='field2' placeholder='field2' onChange={(e) => setField2(e.target.value)} />
+                        <Text>field 3:</Text>
+                        <Input variant='filled' shadow='xl' name='field3' id='field3' placeholder='field3' onChange={(e) => setField3(e.target.value)} />
 
-                        <label htmlFor='field3'>field 3:</label>
-                        <input name='field3' id='field3' placeholder='field3' onChange={(e) => setField3(e.target.value)} />
-
-                        <button type="button" onClick={() => handleSaveDataServer()}>SAVE</button>
-                    </div>)
+                        <Center>
+                            <Button type="button" onClick={() => handleSaveDataServer()} shadow='xl'>SAVE</Button>
+                        </Center>
+                    </Stack>)
             }
-        </div>
+        </Container>
     )
 }
 

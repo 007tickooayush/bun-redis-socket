@@ -3,6 +3,7 @@ import { useCallback, useContext, useEffect, useState } from 'react'
 import { SocketContext } from './context/socket'
 import { UserContext, username } from './context/details';
 import Details from './components/Details';
+import { Button, Center, Container, HStack, Heading, Highlight, Input, Stack, Text } from '@chakra-ui/react';
 
 function App() {
 
@@ -40,25 +41,38 @@ function App() {
 
 	return (
 		<UserContext.Provider value={{username}}>
-			<div >
-				<h1>App Component</h1>
-				<h2>username:</h2>
-				<h2>{username}</h2>
+			<Center>
+				<Container>
+					<Stack>
+						<Heading as='h1' size='2xl'>App Component</Heading>
+						
+						<HStack>
+							<Heading as='h3' size='lg'>username:</Heading>
+							{/* <Heading size='md'>  */}
+								<Highlight query={'spotlight'}>{username}</Highlight>
+							{/* </Heading> */}
+						</HStack>
 
-				<div>
-					<h3>enter message</h3>
-					<input placeholder='enter message'/>
-					<button type='button'>send</button>
-				</div>
+						<Stack>
+							<Heading as='h3' size='md'>Enter message</Heading>
+							<HStack>
+								<Input placeholder='message...' variant='filled' shadow='xl'/>
+								<Button type='button' shadow='xl'>Send</Button>
+							</HStack>
+						</Stack>
 
-				<div>
-					<h3>get user</h3>
-					<input placeholder='receiver userame' onChange={(e) => setRecGetUser(e.target.value)}/>
-					<button type='button' onClick={() => handleGetUser(recGetUser)}>get user</button>
-				</div>
+						<Stack>
+							<Heading as='h3' size='md'>Get user</Heading>
+							<HStack>
+								<Input placeholder='receiver userame' variant='filled' shadow='xl' onChange={(e) => setRecGetUser(e.target.value)} />
+								<Button type='button' shadow='xl' onClick={() => handleGetUser(recGetUser)}>Get Details</Button>
+							</HStack>
+						</Stack>
 
-				<Details />
-			</div>
+						<Details />
+					</Stack>
+				</Container>
+			</Center>
 		</UserContext.Provider>
 
 	)
