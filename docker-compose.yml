@@ -34,6 +34,17 @@ services:
     volumes:
       - ./app:/app
     depends_on:
+      - server2
+  client2:
+    image: client2
+    build: ./client2
+    ports:
+      - 5174:5174
+    environment:
+      - PORT=5174
+    volumes:
+      - ./app:/app
+    depends_on:
       - server1
   bun-redis:
     container_name: bun-redis
