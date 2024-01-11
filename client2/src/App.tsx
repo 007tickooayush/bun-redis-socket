@@ -8,6 +8,7 @@ import { Button, Center, Container, HStack, Heading, Highlight, Input, Stack, Te
 function App() {
 
 	const [recGetUser, setRecGetUser] = useState('');
+	const [msg, setMsg] = useState('');
 	// const [recId, setRecId] = useState('');
 	const {socket} = useContext(SocketContext);
 
@@ -25,7 +26,7 @@ function App() {
 	const handleGetUser = useCallback((userRec:any) => {
 		socket.emit('getUser',{id: userRec})
 	},[socket]);
-		
+
 	useEffect(()=>{
 		// setUsername(generateUsername());
 		socket.emit('addNew',{id: username});
@@ -49,22 +50,12 @@ function App() {
 						<HStack>
 							<Heading as='h3' size='lg'>username:</Heading>
 							{/* <Heading size='md'>  */}
-								<Highlight query={'spotlight'}>
-									{username}
-								</Highlight>
+								<Highlight query={'spotlight'}>{username}</Highlight>
 							{/* </Heading> */}
 						</HStack>
 
 						<Stack>
-							<Heading as='h3' size='md'>Enter message</Heading>
-							<HStack>
-								<Input placeholder='message...' variant='filled' shadow='xl'/>
-								<Button type='button' shadow='xl'>Send</Button>
-							</HStack>
-						</Stack>
-
-						<Stack>
-							<Heading as='h3' size='md'>Get user</Heading>
+							<Heading as='h3' size='md'>Get User Details</Heading>
 							<HStack>
 								<Input placeholder='receiver userame' variant='filled' shadow='xl' onChange={(e) => setRecGetUser(e.target.value)} />
 								<Button type='button' shadow='xl' onClick={() => handleGetUser(recGetUser)}>Get Details</Button>
