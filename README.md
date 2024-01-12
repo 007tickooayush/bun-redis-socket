@@ -41,7 +41,7 @@ This project aims to provide load balancing capabilities for socket.io applicati
 The following environment variables can be configured:
 
 - `REDIS_URL`: The URL of the Redis server (default: `redis://localhost:6379`)
-- `PORT`: The port on which the server should listen (default: `3002` or `3003`)
+- `PORT`: The port on which the server should listen (default: `3009` or `3010`)
 
 ## License
 
