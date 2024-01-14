@@ -30,6 +30,7 @@ const subClient = createClient({
 Promise.all([pubClient.connect(),subClient.connect()]).then(() => {
     console.log('Redis pub sub connected');
 }).then(() => {
+
     io.adapter(createAdapter(pubClient,subClient));
     server.listen(PORT, () => {
         console.log(`listening on => ${PORT}`);
@@ -40,7 +41,7 @@ Promise.all([pubClient.connect(),subClient.connect()]).then(() => {
 });
 
 const userAddedRedis = (message:any) => {
-    console.log(`userAddedRedis message: `,JSON.parse(message));
+    console.log(`message: `,JSON.parse(message));
     const data = JSON.parse(message);
 
     if(data.socket){
@@ -73,12 +74,42 @@ const saveDataServer = (message:any) => {
     }
 }
 
-const channels = ['userAddedRedis','saveDataServer'];
+const pubSubBroadcast = (message:any) => {
+    const pVal = 1;
+    console.log(`pubSubBroadcast message: `,JSON.parse(message));
+    // io.emit('pubSubBroadcast',message);
+    const {id,...data} = JSON.parse(message);
+
+    // handle the broadcast in a way that it is not repeated to the sender
+    if(id){
+        pubClient.get(`pubsub:${id}`).then((present) => {
+            if(present){
+                console.log(`ALREADY PRESENT: "pubsub:${id}":${pVal} not added to set`);
+            }else{
+                pubClient.set(`pubsub:${id}`,`${pVal}`).then(() => {
+                    console.log(`SAVED: "pubsub:${id}":${pVal} added to set`);
+                }).catch(err => {
+                    console.error(`ERROR: "pubsub:${id}":${pVal} not added to set err:>> ${err}`);
+                });
+
+                // emit using the redis subscrived event 
+                io.to(id).emit('broadcastPubSub',data);
+            }
+        }).catch(err => {
+            console.error(`ERROR: "pubsub:${id}":${1} not added to set err:>> ${err}`)
+        });
+        // io.to(id).emit('pubSubBroadcast',data);
+    }
+};
+
+const channels = ['userAddedRedis','saveDataServer','pubSubBroadcast'];
 subClient.subscribe(channels,(message,channel) => {
     if( channel === 'userAddedRedis'){
         userAddedRedis(message);
     }else if(channel === 'saveDataServer'){
         saveDataServer(message);
+    }else if(channel === 'pubSubBroadcast'){
+        pubSubBroadcast(message);
     }
 }).then(() => {
     channels.forEach(channel => {
@@ -109,11 +140,16 @@ io.on('connection', async (socket) => {
         console.log('saveData :>> ', data);
         socket.emit('savedData',data);
     });
-        
+
     socket.on('getData', async (id) => {
         const serverData = await pubClient.get(`data:${id}`);
-        console.log('getData :>> ', id,serverData);
+        console.log('getData :>> ',id, serverData);
         socket.emit('gotData',serverData);
+    });
+
+    socket.on('pubSubBroadcast', async (data) => {
+        await pubClient.publish('pubSubBroadcast',JSON.stringify(data));
+        console.log('pubSubBroadcast :>> ', data);
     });
 
     socket.on('disconnect', () => {
@@ -121,6 +157,7 @@ io.on('connection', async (socket) => {
     });
 });
 
+
 app.get('/api', (req:express.Request, res:express.Response) => {
-    res.send({data:'req from server2'}) 
+    res.send({data:'req from server1'})
 });

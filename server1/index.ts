@@ -75,12 +75,42 @@ const saveDataServer = (message:any) => {
     }
 }
 
-const channels = ['userAddedRedis','saveDataServer'];
+const pubSubBroadcast = (message:any) => {
+    const pVal = 1;
+    console.log(`pubSubBroadcast message: `,JSON.parse(message));
+    // io.emit('pubSubBroadcast',message);
+    const {id,...data} = JSON.parse(message);
+
+    // handle the broadcast in a way that it is not repeated to the sender
+    if(id){
+        pubClient.get(`pubsub:${id}`).then((present) => {
+            if(present){
+                console.log(`ALREADY PRESENT: "pubsub:${id}":${pVal} not added to set`);
+            }else{
+                pubClient.set(`pubsub:${id}`,`${pVal}`).then(() => {
+                    console.log(`SAVED: "pubsub:${id}":${pVal} added to set`);
+                }).catch(err => {
+                    console.error(`ERROR: "pubsub:${id}":${pVal} not added to set err:>> ${err}`);
+                });
+
+                // emit using the redis subscrived event 
+                io.to(id).emit('broadcastPubSub',data);
+            }
+        }).catch(err => {
+            console.error(`ERROR: "pubsub:${id}":${1} not added to set err:>> ${err}`)
+        });
+        // io.to(id).emit('pubSubBroadcast',data);
+    }
+};
+
+const channels = ['userAddedRedis','saveDataServer','pubSubBroadcast'];
 subClient.subscribe(channels,(message,channel) => {
     if( channel === 'userAddedRedis'){
         userAddedRedis(message);
     }else if(channel === 'saveDataServer'){
         saveDataServer(message);
+    }else if(channel === 'pubSubBroadcast'){
+        pubSubBroadcast(message);
     }
 }).then(() => {
     channels.forEach(channel => {
@@ -116,6 +146,11 @@ io.on('connection', async (socket) => {
         const serverData = await pubClient.get(`data:${id}`);
         console.log('getData :>> ',id, serverData);
         socket.emit('gotData',serverData);
+    });
+
+    socket.on('pubSubBroadcast', async (data) => {
+        await pubClient.publish('pubSubBroadcast',JSON.stringify(data));
+        console.log('pubSubBroadcast :>> ', data);
     });
 
     socket.on('disconnect', () => {
