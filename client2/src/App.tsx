@@ -34,16 +34,26 @@ function App() {
 		socket.emit('getUser', { id: userRec })
 	}, [socket]);
 
+	const emitPubSubBroadcast = useCallback((data: any) => {
+		socket.emit('pubSubBroadcast', { id: username, message: data });
+	},[socket]);
+
+	const handleBroadcastPubSub = useCallback((data: any) => {
+		console.log('broadcastPubSub event::', data);
+	},[socket]);
+
 	useEffect(() => {
 		// setUsername(generateUsername());
 		socket.emit('addNew', { id: username });
 
 		socket.on('newAdded', handleUserAdded);
 		socket.on('sentUser', handleSentUser);
+		socket.on('broadcastPubSub',handleBroadcastPubSub);
 
 		return () => {
 			socket.off('newAdded', handleUserAdded);
 			socket.off('sentUser', handleSentUser);
+			socket.on('broadcastPubSub',handleBroadcastPubSub);
 		};
 	}, [socket])
 
@@ -77,9 +87,11 @@ function App() {
 			</Alert>
 		) : (
 			<Center>
-				<Container>
+				<Container margin={12}>
 					<Stack>
-						<Heading as='h1' size='2xl'>App Component</Heading>
+						<Center>
+							<Heading as='h1' size='2xl'>App Component</Heading>
+						</Center>
 
 						<HStack>
 							<Heading as='h3' size='lg'>username:</Heading>
@@ -97,6 +109,10 @@ function App() {
 						</Stack>
 
 						<Details />
+
+						<Stack padding={2}>
+							<Button type='button' shadow='xl' onClick={() => emitPubSubBroadcast(`Pub sub event from ${username}`)}>Emit PubSub Broadcast</Button>
+						</Stack>
 					</Stack>
 				</Container>
 			</Center>

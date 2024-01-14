@@ -53,10 +53,10 @@ const userAddedRedis = (message:any) => {
                 console.error(`ERROR: ${data.socket} not added to set`)
             })
         }else{
-            console.error('data.id attribute not found');
+            console.error('userAddedRedis:: data.id attribute not found');
         }
     }else{
-        console.error('data.socket attribute not found');
+        console.error('userAddedRedis:: data.socket attribute not found');
     }
 }
 
@@ -71,7 +71,7 @@ const saveDataServer = (message:any) => {
             console.error(`ERROR: "data${id}":${JSON.stringify(data)} not added to set err:>> ${err}`)
         })
     }else{
-        console.error('id attribute not found');
+        console.error('saveDataServer:: id attribute not found');
     }
 }
 
@@ -88,18 +88,27 @@ const pubSubBroadcast = (message:any) => {
                 console.log(`ALREADY PRESENT: "pubsub:${id}":${pVal} not added to set`);
             }else{
                 pubClient.set(`pubsub:${id}`,`${pVal}`).then(() => {
+                    // emit using the redis subscrived event
+                    pubClient.get(`id:${id}`).then((socket) => {
+                        if(socket){
+                            io.to(socket).emit('broadcastPubSub',data);
+                        }else{
+                            console.error(`ERROR: "pubsub:${id}":${1} not added to set user ${id} not found`)
+                        }
+                    }).catch(err => {
+                        console.error(`ERROR: "pubsub:${id}":${1} not added to set err:>> ${err}`)
+                    });
                     console.log(`SAVED: "pubsub:${id}":${pVal} added to set`);
                 }).catch(err => {
                     console.error(`ERROR: "pubsub:${id}":${pVal} not added to set err:>> ${err}`);
                 });
-
-                // emit using the redis subscrived event 
-                io.to(id).emit('broadcastPubSub',data);
             }
         }).catch(err => {
             console.error(`ERROR: "pubsub:${id}":${1} not added to set err:>> ${err}`)
         });
         // io.to(id).emit('pubSubBroadcast',data);
+    }else{
+        console.error('pubSubBroadcast:: id attribute not found');
     }
 };
 
@@ -127,7 +136,7 @@ io.on('connection', async (socket) => {
     socket.on('addNew', async (data) => {
         await pubClient.publish('userAddedRedis', JSON.stringify({...data, socket: socket.id}));
         console.log('addNew :>> ', data);
-        io.emit('newAdded',data);
+        socket.emit('newAdded',data);
     });
 
     socket.on('getUser', async (data) => {
