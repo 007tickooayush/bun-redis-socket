@@ -162,8 +162,32 @@ io.on('connection', async (socket) => {
         console.log('pubSubBroadcast :>> ', data);
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
         console.log(`Client disconnected ${socket.id}`);
+
+        // Remove related data stored in Redis
+        // await pubClient.del(`id:${socket.id}`);
+        // await pubClient.del(`data:${socket.id}`);
+        pubClient.get(`user:${socket.id}`).then((user) => {
+            if(user){
+                console.log(`user:${socket.id} found`);
+                pubClient.del(`id:${user}`).then(() => {
+                    console.log(`DELETED: "id:${user}" from redis`);
+                }).catch(err => {
+                    console.error(`ERROR: "id:${user}" not deleted from redis err :>>`,err);
+                });
+                pubClient.del(`pubsub:${user}`).then(() => {
+                    console.log(`DELETED: "pubsub:${user}" from redis`);
+                }).catch(err => {
+                    console.error(`ERROR: "pubsub:${user}" not deleted from redis err :>>`,err);
+                });
+            }else{
+                console.error(`ERROR: "user:${socket.id}" not found`);
+            }
+            
+        }).catch(err => {
+            console.error(`ERROR: "user:${socket.id}" not founderr :>>`,err);
+        });
     });
 });
 

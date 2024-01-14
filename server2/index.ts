@@ -50,7 +50,12 @@ const userAddedRedis = (message:any) => {
                 console.log(`SAVED: ${data.socket} added to set`)
             }).catch(err => {
                 console.error(`ERROR: ${data.socket} not added to set`)
-            })
+            });
+            pubClient.set(`user:${data.socket}`,`id:${data.id}`).then(() => {
+                console.log(`SAVED: "user:${data.socket}":"id:${data.id}" added to set`)
+            }).catch(err => {
+                console.error(`ERROR: "user:${data.socket}":"id:${data.id}" not added to set`)
+            });
         }else{
             console.error('userAddedRedis:: data.id attribute not found');
         }
@@ -161,8 +166,32 @@ io.on('connection', async (socket) => {
         console.log('pubSubBroadcast :>> ', data);
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
         console.log(`Client disconnected ${socket.id}`);
+
+        // Remove related data stored in Redis
+        // await pubClient.del(`id:${socket.id}`);
+        // await pubClient.del(`data:${socket.id}`);
+        pubClient.get(`user:${socket.id}`).then((user) => {
+            if(user){
+                console.log(`user:${socket.id} found`);
+                pubClient.del(`id:${user}`).then(() => {
+                    console.log(`DELETED: "id:${user}" from redis`);
+                }).catch(err => {
+                    console.error(`ERROR: "id:${user}" not deleted from redis err :>>`,err);
+                });
+                pubClient.del(`pubsub:${user}`).then(() => {
+                    console.log(`DELETED: "pubsub:${user}" from redis`);
+                }).catch(err => {
+                    console.error(`ERROR: "pubsub:${user}" not deleted from redis err :>>`,err);
+                });
+            }else{
+                console.error(`ERROR: "user:${socket.id}" not found`);
+            }
+            
+        }).catch(err => {
+            console.error(`ERROR: "user:${socket.id}" not founderr :>>`,err);
+        });
     });
 });
 
