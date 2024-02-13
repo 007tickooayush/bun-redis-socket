@@ -49,20 +49,23 @@ const Details = () => {
 		if(recId){
             console.log('getData',username);
 			socket.emit('getData',recId);
+            onOpen();
 		}else{
             setAlertData('username not set')
             onOpen();
 		}
-	},[socket,recId]);
+	},[socket,recId,onOpen]);
     
 
 	const handleGotData = useCallback((data:any) => {
 		setAlertData(`Saved data for recId: ${recId} :-->\n ${JSON.stringify(data)}`);
-	},[socket,recId]);
+        onOpen();
+	},[socket,recId,onOpen]);
 
 	const handleDataSaved = useCallback((data:any) => {
 		setAlertData(`Data is saved: \n ${JSON.stringify(data)}`);
-	},[socket]);
+        onOpen()
+	},[socket,onOpen]);
     
     return visibleAlert ? (
         <Alert
